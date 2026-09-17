@@ -15,7 +15,7 @@ import { saveProgress } from "../services/watchProgress";
 
 const VIDUKI_BASE = "https://viduki.net";
 // Accent color for the player UI (matches our site theme)
-const DEFAULT_COLOR = "E50914";
+const DEFAULT_COLOR = "8B5CF6";
 // API tiers to try in order: multi-server → multi-language → multi-embed → premium
 const API_TIERS = [1, 2, 3, 4];
 

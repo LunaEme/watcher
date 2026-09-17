@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   getMovieDetails,
   getTvDetails,
@@ -7,15 +7,12 @@ import {
   img,
   backdropSrcSet,
 } from "../services/tmdb";
-import Player from "../components/Player";
 import { SkeletonHero } from "../components/Skeleton";
 
 /**
- * Details page
- * Shows full info for a movie or TV show, with the Viduki player.
- * For TV shows, includes a season/episode picker.
- *
- * Route: /:type/:id (type is "movie" or "tv")
+ * Details page — movie/TV info page.
+ * Layout top to bottom: backdrop+info → trailer → cast/crew tabs → episodes (TV)
+ * "Watch Now" navigates to dedicated /watch page.
  */
 export default function Details() {
   const { type, id } = useParams();
@@ -23,20 +20,17 @@ export default function Details() {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // TV-specific state
+  // TV state
   const [selectedSeason, setSelectedSeason] = useState(1);
-  const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [episodes, setEpisodes] = useState([]);
 
-  // Whether the player is visible (user clicked "Watch Now")
-  const [showPlayer, setShowPlayer] = useState(false);
+  // Info tabs: cast, crew, details
+  const [activeTab, setActiveTab] = useState("cast");
 
-  /* ─── Fetch movie or TV details ─── */
   useEffect(() => {
     setLoading(true);
-    setShowPlayer(false);
+    setActiveTab("cast");
     setSelectedSeason(1);
-    setSelectedEpisode(1);
 
     const fetchDetails =
       type === "tv" ? getTvDetails(id) : getMovieDetails(id);
@@ -44,9 +38,7 @@ export default function Details() {
     fetchDetails
       .then((data) => {
         setDetails(data);
-        // If TV, load first season's episodes
         if (type === "tv" && data.seasons?.length) {
-          // Find the first real season (some shows have season 0 = specials)
           const firstSeason =
             data.seasons.find((s) => s.season_number >= 1) || data.seasons[0];
           setSelectedSeason(firstSeason.season_number);
@@ -56,33 +48,15 @@ export default function Details() {
       .finally(() => setLoading(false));
   }, [type, id]);
 
-  /* ─── Fetch episodes when season changes (TV only) ─── */
   useEffect(() => {
     if (type !== "tv" || !id) return;
-
     getSeasonDetails(id, selectedSeason)
-      .then((data) => {
-        setEpisodes(data.episodes || []);
-        setSelectedEpisode(1); // reset to first episode
-      })
+      .then((data) => setEpisodes(data.episodes || []))
       .catch((err) => console.error("Failed to fetch season:", err));
   }, [type, id, selectedSeason]);
 
-  if (loading) {
-    return (
-      <div className="page">
-        <SkeletonHero />
-      </div>
-    );
-  }
-
-  if (!details) {
-    return (
-      <div className="page">
-        <p className="error-text">Could not load details.</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="page"><SkeletonHero /></div>;
+  if (!details) return <div className="page"><p className="error-text">Could not load details.</p></div>;
 
   const title = details.title || details.name;
   const year = (details.release_date || details.first_air_date || "").slice(0, 4);
@@ -92,14 +66,28 @@ export default function Details() {
   const rating = details.vote_average?.toFixed(1);
   const genres = details.genres?.map((g) => g.name).join(", ");
 
-  // Find a YouTube trailer from the videos response
+  // Cast and crew from credits
+  const cast = details.credits?.cast || [];
+  const crew = details.credits?.crew || [];
+  // Key crew: director, writer, creator
+  const directors = crew.filter((c) => c.job === "Director");
+  const writers = crew.filter((c) => c.job === "Writer" || c.job === "Screenplay");
+  const creators = details.created_by || [];
+
+  // YouTube trailer
   const trailer = details.videos?.results?.find(
     (v) => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser")
   );
 
+  // Watch URL
+  const watchUrl =
+    type === "tv"
+      ? `/watch/tv/${id}/${selectedSeason}/1`
+      : `/watch/movie/${id}`;
+
   return (
     <div className="page">
-      {/* Backdrop */}
+      {/* ─── Backdrop ─── */}
       <div className="details-backdrop">
         {details.backdrop_path && (
           <img
@@ -114,7 +102,7 @@ export default function Details() {
       </div>
 
       <div className="details-content">
-        {/* Poster + info side by side */}
+        {/* ─── Top section: poster + info ─── */}
         <div className="details-header">
           {details.poster_path && (
             <img
@@ -123,64 +111,169 @@ export default function Details() {
               alt={title}
             />
           )}
-
           <div className="details-info">
             <h1 className="details-title">{title}</h1>
-
             <div className="details-meta">
               {year && <span>{year}</span>}
               {runtime && <span>{runtime}</span>}
               {rating && <span>⭐ {rating}</span>}
-            </div>
-
-            {genres && <p className="details-genres">{genres}</p>}
-            {details.overview && (
-              <p className="details-overview">{details.overview}</p>
-            )}
-
-            <div className="details-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowPlayer(true)}
-              >
-                Watch Now
-              </button>
-
-              {/* YouTube trailer link (from 67movies research) */}
-              {trailer && (
-                <a
-                  className="btn btn-secondary"
-                  href={`https://www.youtube.com/watch?v=${trailer.key}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Trailer
-                </a>
+              {type === "tv" && details.number_of_seasons && (
+                <span>{details.number_of_seasons} Season{details.number_of_seasons > 1 ? "s" : ""}</span>
               )}
+            </div>
+            {genres && <p className="details-genres">{genres}</p>}
+            {details.overview && <p className="details-overview">{details.overview}</p>}
+            <div className="details-actions">
+              <Link to={watchUrl} className="btn btn-primary">▶ Watch Now</Link>
             </div>
           </div>
         </div>
 
-        {/* ─── Player ─── */}
-        {showPlayer && (
-          <div className="details-player">
-            <Player
-              type={type}
-              tmdbId={id}
-              season={selectedSeason}
-              episode={selectedEpisode}
-            />
-          </div>
+        {/* ─── Trailer section ─── */}
+        {trailer && (
+          <section className="details-section">
+            <h2 className="section-title">Trailer</h2>
+            <div className="trailer-container">
+              <div className="trailer-wrapper">
+                <iframe
+                  src={`https://www.youtube.com/embed/${trailer.key}?rel=0`}
+                  title={`${title} - Trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  frameBorder="0"
+                />
+              </div>
+            </div>
+          </section>
         )}
 
-        {/* ─── Season / Episode picker (TV only) ─── */}
+        {/* ─── Cast / Crew / Details tabs — Letterboxd style ─── */}
+        <section className="details-section">
+          <div className="info-tabs">
+            <button
+              className={`info-tab ${activeTab === "cast" ? "active" : ""}`}
+              onClick={() => setActiveTab("cast")}
+            >Cast</button>
+            <button
+              className={`info-tab ${activeTab === "crew" ? "active" : ""}`}
+              onClick={() => setActiveTab("crew")}
+            >Crew</button>
+            <button
+              className={`info-tab ${activeTab === "details" ? "active" : ""}`}
+              onClick={() => setActiveTab("details")}
+            >Details</button>
+          </div>
+
+          {/* Cast tab */}
+          {activeTab === "cast" && (
+            <div className="cast-list">
+              {cast.slice(0, 20).map((person) => (
+                <div key={person.credit_id || person.id} className="cast-item">
+                  <div className="cast-photo">
+                    {person.profile_path ? (
+                      <img src={img(person.profile_path, "w185")} alt={person.name} />
+                    ) : (
+                      <div className="cast-photo-placeholder">
+                        {person.name?.[0] || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="cast-info">
+                    <span className="cast-name">{person.name}</span>
+                    <span className="cast-character">{person.character}</span>
+                  </div>
+                </div>
+              ))}
+              {cast.length === 0 && <p className="tab-empty">No cast information available.</p>}
+            </div>
+          )}
+
+          {/* Crew tab */}
+          {activeTab === "crew" && (
+            <div className="cast-list">
+              {directors.length > 0 && directors.map((p) => (
+                <div key={p.credit_id || p.id} className="cast-item">
+                  <div className="cast-photo">
+                    {p.profile_path ? (
+                      <img src={img(p.profile_path, "w185")} alt={p.name} />
+                    ) : (
+                      <div className="cast-photo-placeholder">{p.name?.[0]}</div>
+                    )}
+                  </div>
+                  <div className="cast-info">
+                    <span className="cast-name">{p.name}</span>
+                    <span className="cast-character">Director</span>
+                  </div>
+                </div>
+              ))}
+              {creators.length > 0 && creators.map((p) => (
+                <div key={p.id} className="cast-item">
+                  <div className="cast-photo">
+                    {p.profile_path ? (
+                      <img src={img(p.profile_path, "w185")} alt={p.name} />
+                    ) : (
+                      <div className="cast-photo-placeholder">{p.name?.[0]}</div>
+                    )}
+                  </div>
+                  <div className="cast-info">
+                    <span className="cast-name">{p.name}</span>
+                    <span className="cast-character">Creator</span>
+                  </div>
+                </div>
+              ))}
+              {writers.slice(0, 5).map((p) => (
+                <div key={p.credit_id || p.id} className="cast-item">
+                  <div className="cast-photo">
+                    {p.profile_path ? (
+                      <img src={img(p.profile_path, "w185")} alt={p.name} />
+                    ) : (
+                      <div className="cast-photo-placeholder">{p.name?.[0]}</div>
+                    )}
+                  </div>
+                  <div className="cast-info">
+                    <span className="cast-name">{p.name}</span>
+                    <span className="cast-character">{p.job}</span>
+                  </div>
+                </div>
+              ))}
+              {directors.length === 0 && creators.length === 0 && writers.length === 0 && (
+                <p className="tab-empty">No crew information available.</p>
+              )}
+            </div>
+          )}
+
+          {/* Details tab */}
+          {activeTab === "details" && (
+            <div className="details-tab-content">
+              {details.status && (
+                <div className="detail-row"><span className="detail-label">Status</span><span>{details.status}</span></div>
+              )}
+              {details.original_language && (
+                <div className="detail-row"><span className="detail-label">Language</span><span>{details.original_language.toUpperCase()}</span></div>
+              )}
+              {details.budget > 0 && (
+                <div className="detail-row"><span className="detail-label">Budget</span><span>${(details.budget / 1_000_000).toFixed(0)}M</span></div>
+              )}
+              {details.revenue > 0 && (
+                <div className="detail-row"><span className="detail-label">Revenue</span><span>${(details.revenue / 1_000_000).toFixed(0)}M</span></div>
+              )}
+              {details.production_companies?.length > 0 && (
+                <div className="detail-row"><span className="detail-label">Production</span><span>{details.production_companies.map((c) => c.name).join(", ")}</span></div>
+              )}
+              {genres && (
+                <div className="detail-row"><span className="detail-label">Genres</span><span>{genres}</span></div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ─── Episodes (TV only) ─── */}
         {type === "tv" && details.seasons?.length > 0 && (
-          <div className="episode-picker">
-            {/* Season selector */}
-            <div className="season-selector">
-              <label htmlFor="season-select">Season</label>
+          <section className="details-section episodes-section">
+            <div className="episodes-header">
+              <h2 className="section-title">Episodes</h2>
               <select
-                id="season-select"
+                className="season-select"
                 value={selectedSeason}
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
               >
@@ -194,27 +287,30 @@ export default function Details() {
               </select>
             </div>
 
-            {/* Episode list */}
-            <div className="episode-list">
+            <div className="episodes-list">
               {episodes.map((ep) => (
-                <button
+                <Link
                   key={ep.id}
-                  className={`episode-btn ${
-                    ep.episode_number === selectedEpisode ? "active" : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedEpisode(ep.episode_number);
-                    setShowPlayer(true);
-                  }}
+                  to={`/watch/tv/${id}/${selectedSeason}/${ep.episode_number}`}
+                  className="episode-card"
                 >
-                  <span className="episode-num">E{ep.episode_number}</span>
-                  <span className="episode-name">
-                    {ep.name || `Episode ${ep.episode_number}`}
-                  </span>
-                </button>
+                  <span className="episode-number">{ep.episode_number}</span>
+                  <div className="episode-thumb">
+                    {ep.still_path ? (
+                      <img src={img(ep.still_path, "w342")} alt={ep.name} loading="lazy" />
+                    ) : (
+                      <div className="episode-thumb-placeholder" />
+                    )}
+                  </div>
+                  <div className="episode-info">
+                    <h3 className="episode-title">{ep.name || `Episode ${ep.episode_number}`}</h3>
+                    {ep.overview && <p className="episode-overview">{ep.overview}</p>}
+                    {ep.runtime && <span className="episode-runtime">{ep.runtime}m</span>}
+                  </div>
+                </Link>
               ))}
             </div>
-          </div>
+          </section>
         )}
       </div>
     </div>

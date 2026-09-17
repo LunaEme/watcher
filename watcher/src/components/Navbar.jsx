@@ -61,7 +61,7 @@ export default function Sidebar() {
           <span className="sidebar-label">Home</span>
         </Link>
 
-        <Link to="/browse/movies" className={`sidebar-item ${location.pathname === "/browse/movies" ? "active" : ""}`}>
+        <Link to="/search?q=&type=movie" className={`sidebar-item ${location.pathname === "/search" && location.search.includes("type=movie") ? "active" : ""}`}>
           <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
             <line x1="7" y1="2" x2="7" y2="22" />
@@ -75,29 +75,22 @@ export default function Sidebar() {
           <span className="sidebar-label">Movies</span>
         </Link>
 
-        <Link to="/browse/tv" className={`sidebar-item ${location.pathname === "/browse/tv" ? "active" : ""}`}>
+        <Link to="/search?q=&type=tv" className={`sidebar-item ${location.pathname === "/search" && location.search.includes("type=tv") ? "active" : ""}`}>
           <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
             <polyline points="17 2 12 7 7 2" />
           </svg>
-          <span className="sidebar-label">Shows</span>
+          <span className="sidebar-label">TV Shows</span>
         </Link>
 
-        <Link to="/browse/anime" className={`sidebar-item ${location.pathname === "/browse/anime" ? "active" : ""}`}>
-          <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-          <span className="sidebar-label">Anime</span>
-        </Link>
-
-        <Link to="/browse/new" className={`sidebar-item ${location.pathname === "/browse/new" ? "active" : ""}`}>
+        <Link to="/categories" className="sidebar-item">
           <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="3" width="7" height="7" />
             <rect x="14" y="3" width="7" height="7" />
             <rect x="14" y="14" width="7" height="7" />
             <rect x="3" y="14" width="7" height="7" />
           </svg>
-          <span className="sidebar-label">New & Popular</span>
+          <span className="sidebar-label">Categories</span>
         </Link>
       </aside>
 

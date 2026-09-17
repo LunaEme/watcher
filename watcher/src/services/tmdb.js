@@ -46,8 +46,6 @@ export const backdropSrcSet = (path) => {
 async function get(endpoint, params = {}) {
   const url = new URL(`${BASE}${endpoint}`);
   url.searchParams.set("api_key", API_KEY);
-  // Block adult content globally
-  url.searchParams.set("include_adult", "false");
   // Attach any extra query params
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
@@ -83,28 +81,7 @@ export const getSeasonDetails = (tvId, seasonNum) =>
 export const search = (query, page = 1) =>
   get("/search/multi", { query, page });
 
-/* ─── Genre lists ─── */
+/* ─── Genre lists (for filtering later) ─── */
 
 export const getGenres = (type = "movie") =>
   get(`/genre/${type}/list`);
-
-/**
- * Discover endpoint — filter by genre, region, sort order, etc.
- * Used by the browse pages for genre-filtered content.
- * type: "movie" or "tv"
- * params: { with_genres, sort_by, with_origin_country, page, ... }
- */
-export const discover = (type = "movie", params = {}) =>
-  get(`/discover/${type}`, params);
-
-/**
- * Anime discovery — Animation genre (16) + Japanese origin.
- * TMDB doesn't have a dedicated anime category, so we fake it.
- */
-export const getAnime = (page = 1) =>
-  discover("tv", {
-    with_genres: "16",
-    with_origin_country: "JP",
-    sort_by: "popularity.desc",
-    page,
-  });

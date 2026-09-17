@@ -7,13 +7,11 @@ import MediaCard from "../components/MediaCard";
 import { SkeletonRow, SkeletonHero } from "../components/Skeleton";
 
 /**
- * Home page — hero carousel + content rows.
- * Splits trending into movies and series for separate rows.
+ * Home page — Prime Video layout.
+ * Hero carousel at top, then horizontal content rows.
  */
 export default function Home() {
   const [trending, setTrending] = useState([]);
-  const [trendingMovies, setTrendingMovies] = useState([]);
-  const [trendingSeries, setTrendingSeries] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
   const [topRated, setTopRated] = useState([]);
@@ -23,16 +21,12 @@ export default function Home() {
   useEffect(() => {
     Promise.all([
       getTrending("all", "week"),
-      getTrending("movie", "week"),
-      getTrending("tv", "week"),
       getPopular("movie"),
       getPopular("tv"),
       getTopRated("movie"),
     ])
-      .then(([allRes, movieTrendRes, tvTrendRes, moviesRes, tvRes, topRes]) => {
-        setTrending(allRes.results || []);
-        setTrendingMovies(movieTrendRes.results || []);
-        setTrendingSeries(tvTrendRes.results || []);
+      .then(([trendingRes, moviesRes, tvRes, topRes]) => {
+        setTrending(trendingRes.results || []);
         setPopularMovies(moviesRes.results || []);
         setPopularTv(tvRes.results || []);
         setTopRated(topRes.results || []);
@@ -55,8 +49,10 @@ export default function Home() {
 
   return (
     <div className="page">
+      {/* Hero carousel uses first 8 trending items */}
       <HeroCarousel items={trending} />
 
+      {/* Continue watching */}
       {continueWatching.length > 0 && (
         <section className="media-row">
           <h2 className="media-row-title">Continue Watching</h2>
@@ -68,8 +64,8 @@ export default function Home() {
                   item={{
                     id: item.id,
                     title: item.title,
-                    poster_path: item.poster_path,
                     backdrop_path: item.backdrop_path,
+                    poster_path: item.poster_path,
                     media_type: item.type,
                   }}
                   type={item.type}
@@ -80,8 +76,7 @@ export default function Home() {
         </section>
       )}
 
-      <MediaRow title="Trending movies this week" items={trendingMovies} type="movie" />
-      <MediaRow title="Trending series this week" items={trendingSeries} type="tv" />
+      <MediaRow title="Trending This Week" items={trending.slice(8)} />
       <MediaRow title="Popular Movies" items={popularMovies} type="movie" />
       <MediaRow title="Popular TV Shows" items={popularTv} type="tv" />
       <MediaRow title="Top Rated" items={topRated} type="movie" />
