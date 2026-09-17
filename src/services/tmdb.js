@@ -83,6 +83,14 @@ export const getSeasonDetails = (tvId, seasonNum) =>
 export const search = (query, page = 1) =>
   get("/search/multi", { query, page });
 
+/** Search for people (actors, directors) by name */
+export const searchPerson = (query) =>
+  get("/search/person", { query });
+
+/** Get a person's movie/TV credits */
+export const getPersonCredits = (personId) =>
+  get(`/person/${personId}/combined_credits`);
+
 /* ─── Genre lists ─── */
 
 export const getGenres = (type = "movie") =>
