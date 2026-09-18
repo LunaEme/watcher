@@ -32,6 +32,8 @@ export default function Browse() {
   const { category } = useParams();
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.movies;
 
+  useEffect(() => { document.title = `${config.title} - Watcher`; }, [config.title]);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

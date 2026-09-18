@@ -38,6 +38,7 @@ export default function Details() {
     fetchDetails
       .then((data) => {
         setDetails(data);
+        document.title = `${data.title || data.name} - Watcher`;
         if (type === "tv" && data.seasons?.length) {
           const firstSeason =
             data.seasons.find((s) => s.season_number >= 1) || data.seasons[0];
@@ -168,7 +169,7 @@ export default function Details() {
           {activeTab === "cast" && (
             <div className="cast-list">
               {cast.slice(0, 20).map((person) => (
-                <div key={person.credit_id || person.id} className="cast-item">
+                <Link key={person.credit_id || person.id} to={`/person/${person.id}`} className="cast-item">
                   <div className="cast-photo">
                     {person.profile_path ? (
                       <img src={img(person.profile_path, "w185")} alt={person.name} />
@@ -182,7 +183,7 @@ export default function Details() {
                     <span className="cast-name">{person.name}</span>
                     <span className="cast-character">{person.character}</span>
                   </div>
-                </div>
+                </Link>
               ))}
               {cast.length === 0 && <p className="tab-empty">No cast information available.</p>}
             </div>
@@ -192,7 +193,7 @@ export default function Details() {
           {activeTab === "crew" && (
             <div className="cast-list">
               {directors.length > 0 && directors.map((p) => (
-                <div key={p.credit_id || p.id} className="cast-item">
+                <Link key={p.credit_id || p.id} to={`/person/${p.id}`} className="cast-item">
                   <div className="cast-photo">
                     {p.profile_path ? (
                       <img src={img(p.profile_path, "w185")} alt={p.name} />
@@ -204,10 +205,10 @@ export default function Details() {
                     <span className="cast-name">{p.name}</span>
                     <span className="cast-character">Director</span>
                   </div>
-                </div>
+                </Link>
               ))}
               {creators.length > 0 && creators.map((p) => (
-                <div key={p.id} className="cast-item">
+                <Link key={p.id} to={`/person/${p.id}`} className="cast-item">
                   <div className="cast-photo">
                     {p.profile_path ? (
                       <img src={img(p.profile_path, "w185")} alt={p.name} />
@@ -219,10 +220,10 @@ export default function Details() {
                     <span className="cast-name">{p.name}</span>
                     <span className="cast-character">Creator</span>
                   </div>
-                </div>
+                </Link>
               ))}
               {writers.slice(0, 5).map((p) => (
-                <div key={p.credit_id || p.id} className="cast-item">
+                <Link key={p.credit_id || p.id} to={`/person/${p.id}`} className="cast-item">
                   <div className="cast-photo">
                     {p.profile_path ? (
                       <img src={img(p.profile_path, "w185")} alt={p.name} />
@@ -234,7 +235,7 @@ export default function Details() {
                     <span className="cast-name">{p.name}</span>
                     <span className="cast-character">{p.job}</span>
                   </div>
-                </div>
+                </Link>
               ))}
               {directors.length === 0 && creators.length === 0 && writers.length === 0 && (
                 <p className="tab-empty">No crew information available.</p>

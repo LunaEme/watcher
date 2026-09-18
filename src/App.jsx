@@ -6,6 +6,7 @@ import Details from "./pages/Details";
 import Search from "./pages/Search";
 import Browse from "./pages/Browse";
 import Watch from "./pages/Watch";
+import Person from "./pages/Person";
 
 /**
  * App root — topbar + content + footer.
@@ -21,6 +22,7 @@ export default function App() {
             <TopBar />
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/person/:id" element={<Person />} />
               <Route path="/:type/:id" element={<Details />} />
               <Route path="/search" element={<Search />} />
               <Route path="/browse/:category" element={<Browse />} />

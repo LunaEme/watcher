@@ -13,6 +13,7 @@ import PersonSearch from "../components/PersonSearch";
 const currentYear = new Date().getFullYear();
 
 export default function Search() {
+  useEffect(() => { document.title = "Search - Watcher"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 

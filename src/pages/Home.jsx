@@ -21,6 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Watcher";
     Promise.all([
       getTrending("all", "week"),
       getTrending("movie", "week"),
@@ -80,10 +81,10 @@ export default function Home() {
         </section>
       )}
 
-      <MediaRow title="Trending movies this week" items={trendingMovies} type="movie" />
-      <MediaRow title="Trending series this week" items={trendingSeries} type="tv" />
       <MediaRow title="Popular Movies" items={popularMovies} type="movie" />
       <MediaRow title="Popular TV Shows" items={popularTv} type="tv" />
+      <MediaRow title="Trending movies this week" items={trendingMovies} type="movie" />
+      <MediaRow title="Trending series this week" items={trendingSeries} type="tv" />
       <MediaRow title="Top Rated" items={topRated} type="movie" />
     </div>
   );

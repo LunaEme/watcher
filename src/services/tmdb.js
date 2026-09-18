@@ -75,6 +75,10 @@ export const getMovieDetails = (id) =>
 export const getTvDetails = (id) =>
   get(`/tv/${id}`, { append_to_response: "videos,credits" });
 
+/** Get similar/recommended titles */
+export const getRecommendations = (type, id) =>
+  get(`/${type}/${id}/recommendations`);
+
 /** TV season details (episode list) */
 export const getSeasonDetails = (tvId, seasonNum) =>
   get(`/tv/${tvId}/season/${seasonNum}`);
@@ -90,6 +94,10 @@ export const searchPerson = (query) =>
 /** Get a person's movie/TV credits */
 export const getPersonCredits = (personId) =>
   get(`/person/${personId}/combined_credits`);
+
+/** Get person details (bio, photo, etc.) */
+export const getPersonDetails = (personId) =>
+  get(`/person/${personId}`);
 
 /* ─── Genre lists ─── */
 
